@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('https://images.pexels.com/photos/2085998/pexels-photo-2085998.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            margin: 0;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            width: 90%;
+            max-width: 800px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .column {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .current-time {
+            font-size: 2.5vw;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .timer-display {
+            font-size: 2vw;
+            color: #070700;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .message {
+            font-size: 1.4vw;
+            color: #555;
+            text-align: left;
+            animation: scaleText 1s infinite;
+        }
+
+        @keyframes scaleText {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .separator {
+            width: 1px;
+            background-color: #ddd;
+        }
+
+        .meal-timer {
+            font-size: 1.2vw;
+            color: #333;
+            text-align: center;
+            padding: 15px 30px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(255, 255, 255, 0.7);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                flex-direction: column;
+                margin-bottom: 10px;
+            }
+
+            .separator {
+                display: none;
+            }
+
+            .current-time,
+            .timer-display,
+            .message,
+            .meal-timer {
+                font-size: 4vw;
+            }
+
+            .meal-timer {
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <div class="container">
+            <div class="column">
+                <div class="current-time" id="currentTime"></div>
+            </div>
+            <div class="separator"></div>
+            <div class="column">
+                <div class="timer-display" id="timerDisplay"></div>
+                <div class="message" id="message"></div>
+            </div>
+        </div>
+        <div class="meal-timer" id="mealTimer"></div>
+    </div>
+
+    <script>
+        const workTips = [
+            "摸鱼虽香，KPI在咆哮，再摸小心被它追着咬！",
+            "键盘敲冒烟，加班仍难免，加油敲出一片天！",
+            "需求简单到离谱，实现全靠你离谱——越哥神秘微笑",
+            "打工难发家，不打没钱花，乖乖搬砖吧！",
+            "代码如迷宫，bug影重重，秃头修仙向前冲！",
+            "福报列车已进站，抓紧上车别手软！"
+        ];
+
+        const afterWorkTips = [
+            "下班似火箭，快乐冲上天！工位再见不相见！",
+            "逃离工作牢笼，解锁【自由快乐人】成就！",
+            "钉钉已拜拜，美食嗨起来！开启干饭新姿态！",
+            "打工人的躯壳，终于找回自由的魂魄！",
+            "今日职场戏落幕，明日接着装靠谱！",
+            "《努力工作秀》已收官，明天接着来表演！"
+        ];
+
+        const nightTips = [
+            "夜猫快睡觉，发际线在呼救，别让它再变秃瓢！",
+            "熬夜小能手，黑眼圈已包邮，免费送到你床头！",
+            "月亮睡了你不睡，医院床位排到北！",
+            "凌晨修仙要谨慎，猝死警告已来临！",
+            "熬夜和头发，你选哪个留下？别再犹豫犯傻啦！",
+            "手机烫得快冒烟，你还不睡为哪般？"
+        ];
+
+        const lunchTips = [
+            "干饭不争先，脑袋要冒烟！食堂美味在召唤！",
+            "饿死小事情，干饭第一位！吃饱才有力气怼！",
+            "胃在大声喊，快把食物填，不然罢工给你看！",
+            "血糖亮红灯，吃饭不能等，赶紧投喂别磨蹭！",
+            "吃饭不抢先，快乐少一半！红烧肉在向你盼！",
+            "打工人的体内，一半奶茶一半咖啡的魔力！"
+        ];
+
+        const lunchBreakTips = [
+            "午休不躺平，效率准归零！折叠床成救命星！",
+            "大脑开启休闲档，《消消乐》里战一场！",
+            "午睡一小会，能量满格倍！回蓝完毕接着怼！",
+            "周公邀请已送达，正在前往梦境家！",
+            "工位秒变休息舱，打工人来充能量！",
+            "同事悄悄在偷拍，睡颜表情包即将来！"
+        ];
+
+        const colors = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple'];
+        const messageElement = document.getElementById('message');
+
+        function getRandomColor() {
+            const randomR = Math.floor(Math.random() * 256);// 随机红
+            const randomG = Math.floor(Math.random() * 256);// 随机绿
+            const randomB = Math.floor(Math.random() * 256);// 随机蓝
+            return `rgb(${randomR}, ${randomG}, ${randomB})`;
+        }
+
+        setInterval(() => {
+            messageElement.style.color = getRandomColor();
+        }, 1000);
+
+        function updateTimer() {
+            const now = new Date();
+            const dayOfWeek = now.getDay();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            let endOfDay;
+
+            // 处理周一到周五中午 12:00 - 14:00
+            if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                if (currentHour === 12 && currentMinute < 30) {
+                    if (currentMinute % 5 === 0) {
+                        const tipIndex = Math.floor((Date.now() / (5 * 60 * 1000)) % lunchTips.length);
+                        document.getElementById('timerDisplay').textContent = lunchTips[tipIndex];
+                        document.getElementById('message').textContent = '';
+                        return;
+                    }
+                } else if ((currentHour === 12 && currentMinute >= 30) || (currentHour === 13)) {
+                    const tipIndex = Math.floor((Date.now() / (5 * 60 * 1000)) % lunchBreakTips.length);
+                    document.getElementById('timerDisplay').textContent = lunchBreakTips[tipIndex];
+                    document.getElementById('message').textContent = '';
+                    return;
+                }
+            }
+
+            switch (dayOfWeek) {
+                case 1:
+                case 2:
+                case 4:
+                    endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 21, 0, 0);
+                    break;
+                case 3:
+                case 5:
+                    endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0);
+                    break;
+                case 6:
+                    document.getElementById('timerDisplay').textContent = '今天是休息日';
+                    document.getElementById('message').textContent = '给我狠狠地玩^_^';
+                    return;
+                default:
+                    document.getElementById('timerDisplay').textContent = '今天是休息日';
+                    document.getElementById('message').textContent = '';
+                    return;
+            }
+
+            if (now > endOfDay) {
+                if (currentHour >= 9 && currentHour < 21) {
+                    const tipIndex = Math.floor((Date.now() / (5 * 60 * 1000)) % afterWorkTips.length);
+                    document.getElementById('timerDisplay').textContent = afterWorkTips[tipIndex];
+                    document.getElementById('message').textContent = '';
+                } else if (currentHour >= 21 && currentHour < 24) {
+                    const tipIndex = Math.floor((Date.now() / (30 * 60 * 1000)) % nightTips.length);
+                    document.getElementById('timerDisplay').textContent = nightTips[tipIndex];
+                    document.getElementById('message').textContent = '';
+                }
+            } else {
+                const timeLeft = endOfDay - now;
+                const hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((timeLeft / (1000 * 60)) % 60);
+                const seconds = Math.floor((timeLeft / 1000) % 60);
+
+                const tipIndex = Math.floor((Date.now() / (5 * 60 * 1000)) % workTips.length);
+                document.getElementById('timerDisplay').innerHTML = `距离下班时间：<br>${hours}小时 ${minutes}分钟 ${seconds}秒`;
+                document.getElementById('message').textContent = workTips[tipIndex];
+            }
+        }
+
+        function updateMealTimer() {
+            const now = new Date();
+            const dayOfWeek = now.getDay();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            let mealTimeLeft;
+
+            if ([1, 2, 3, 4, 5].includes(dayOfWeek)) {
+                if (currentHour >= 9 && currentHour < 12) {
+                    const lunchTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+                    mealTimeLeft = lunchTime - now;
+                    const hours = Math.floor((mealTimeLeft / (1000 * 60 * 60)) % 24);
+                    const minutes = Math.floor((mealTimeLeft / (1000 * 60)) % 60);
+                    const seconds = Math.floor((mealTimeLeft / 1000) % 60);
+                    document.getElementById('mealTimer').textContent = `距离午餐时间（12:00）还有 ${hours}小时 ${minutes}分钟 ${seconds}秒`;
+                } else if ([1, 2, 4].includes(dayOfWeek) && currentHour >= 14 && currentHour < 18) {
+                    const dinnerTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0);
+                    mealTimeLeft = dinnerTime - now;
+                    const hours = Math.floor((mealTimeLeft / (1000 * 60 * 60)) % 24);
+                    const minutes = Math.floor((mealTimeLeft / (1000 * 60)) % 60);
+                    const seconds = Math.floor((mealTimeLeft / 1000) % 60);
+                    document.getElementById('mealTimer').textContent = `距离晚餐时间（18:00）还有 ${hours}小时 ${minutes}分钟 ${seconds}秒`;
+                } else if([3].includes(dayOfWeek)) {
+                    document.getElementById('mealTimer').textContent = '今天没晚餐！';
+                }else{
+                    document.getElementById('mealTimer').textContent = '';
+                }
+            } else {
+                document.getElementById('mealTimer').textContent = '';
+            }
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const options = { weekday: 'long', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            document.getElementById('currentTime').textContent = now.toLocaleDateString('zh-CN', options);
+        }
+
+        setInterval(updateTimer, 1000);
+        setInterval(updateMealTimer, 1000);
+        setInterval(updateTime, 1000);
+        updateTimer();
+        updateMealTimer();
+        updateTime();
+    </script>
+</body>
+
+</html>    
